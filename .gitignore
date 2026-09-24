@@ -2,7 +2,7 @@
 
 deploy/out
 deploy/env
+server/env/
+client/env/
 /out
-/.trash
-/.claude
 .env
