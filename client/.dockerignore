@@ -4,4 +4,3 @@ out
 build
 .git
 .env.local
-.claude
