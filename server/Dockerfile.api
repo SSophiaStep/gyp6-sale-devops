@@ -1,14 +1,3 @@
-# # Stage 1: Build
-# FROM oven/bun:1.2-alpine AS builder
-# WORKDIR /app
-# COPY . .
-# RUN bun install --frozen-lockfile
-
-# # 👇 Generate Prisma Client so TypeScript types exist for the build step
-# RUN bunx prisma generate --schema=./src/infrastructure/prisma/schema.prisma
-RUN find src -name "*.spec.ts" -delete
-# RUN bun run build
-
 # Stage 1: Build
 FROM oven/bun:1.2-alpine AS builder
 WORKDIR /app
@@ -23,6 +12,11 @@ RUN bunx prisma generate --schema=./src/infrastructure/prisma/schema.prisma
 
 # Finally, copy the rest of the code and build (this layer changes often)
 COPY . .
+
+# Remove test files from the build context: they are not needed in the image
+# and fail type-checking against the current entity constructors
+RUN find src -name "*.spec.ts" -delete
+
 RUN bun run build
 
 # Stage 2: Runner
