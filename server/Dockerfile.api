@@ -6,6 +6,7 @@
 
 # # 👇 Generate Prisma Client so TypeScript types exist for the build step
 # RUN bunx prisma generate --schema=./src/infrastructure/prisma/schema.prisma
+RUN find src -name "*.spec.ts" -delete
 # RUN bun run build
 
 # Stage 1: Build
