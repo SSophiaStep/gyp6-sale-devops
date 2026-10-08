@@ -26,12 +26,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
-          key: bun-frontend-${{ hashFiles('client/bun.lockb') }}
+          key: bun-frontend-${{ hashFiles('client/bun.lock') }}
           restore-keys: bun-frontend-
       - run: bun install --frozen-lockfile
-      - name: Lint (report only)
+      - name: Lint (ESLint, blocking)
         run: bun run lint
-        continue-on-error: true
 
   backend:
     name: Backend (lint & test)
@@ -48,20 +47,21 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
-          key: bun-backend-${{ hashFiles('server/bun.lockb') }}
+          key: bun-backend-${{ hashFiles('server/bun.lock') }}
           restore-keys: bun-backend-
       - run: bun install --frozen-lockfile
       - run: bunx prisma generate
-      - name: Lint (report only)
+      - name: Lint (ESLint, blocking)
         run: bun run lint
-        continue-on-error: true
-      - run: bun run test:bun
+      - name: Unit tests
+        run: bun run test:bun
 
   build:
     name: Build & scan (${{ matrix.service }})
     needs: [frontend, backend]
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         include:
           - service: frontend
@@ -83,7 +83,7 @@ jobs:
           tags: gyp6-${{ matrix.service }}:ci-${{ github.sha }}
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
-      - name: Scan image for vulnerabilities (Trivy)
+      - name: Scan image for vulnerabilities (Trivy, report only)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: gyp6-${{ matrix.service }}:ci-${{ github.sha }}
