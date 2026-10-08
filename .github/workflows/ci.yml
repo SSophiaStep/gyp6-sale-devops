@@ -84,7 +84,7 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
       - name: Scan image for vulnerabilities (Trivy)
-          uses: aquasecurity/trivy-action@master
+         - uses: aquasecurity/trivy-action@master
         with:
           image-ref: gyp6-${{ matrix.service }}:ci-${{ github.sha }}
           format: table
