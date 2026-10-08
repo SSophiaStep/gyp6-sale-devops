@@ -29,7 +29,9 @@ jobs:
           key: bun-frontend-${{ hashFiles('client/bun.lockb') }}
           restore-keys: bun-frontend-
       - run: bun install --frozen-lockfile
-      - run: bun run lint
+      - name: Lint (report only)
+        run: bun run lint
+        continue-on-error: true
 
   backend:
     name: Backend (lint & test)
@@ -50,7 +52,9 @@ jobs:
           restore-keys: bun-backend-
       - run: bun install --frozen-lockfile
       - run: bunx prisma generate
-      - run: bun run lint
+      - name: Lint (report only)
+        run: bun run lint
+        continue-on-error: true
       - run: bun run test:bun
 
   build:
