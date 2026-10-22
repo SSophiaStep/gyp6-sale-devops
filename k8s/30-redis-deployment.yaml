@@ -1,0 +1,54 @@
+# DVO-L3-7F2A91
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: gyp6-sale
+  labels:
+    app: redis
+    mascot: kabachok
+  annotations:
+    devops-lab/mascot-approved: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+        mascot: kabachok
+      annotations:
+        devops-lab/mascot-approved: "true"
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: redis
+          image: redis:8.2.5-bookworm
+          args: ["redis-server", "--requirepass", "$(REDIS_PASSWORD)"]
+          ports:
+            - containerPort: 6379
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: gyp6-secret
+                  key: REDIS_PASSWORD
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          readinessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 15
+            periodSeconds: 20

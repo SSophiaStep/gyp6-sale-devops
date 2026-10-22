@@ -1,0 +1,10 @@
+# DVO-L3-7F2A91
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gyp6-sale
+  labels:
+    app: gyp6
+    mascot: kabachok
+  annotations:
+    devops-lab/mascot-approved: "true"
