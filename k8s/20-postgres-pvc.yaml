@@ -1,0 +1,17 @@
+# DVO-L3-7F2A91
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-data
+  namespace: gyp6-sale
+  labels:
+    app: postgres
+    mascot: kabachok
+  annotations:
+    devops-lab/mascot-approved: "true"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

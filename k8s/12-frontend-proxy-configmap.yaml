@@ -1,0 +1,28 @@
+# DVO-L3-7F2A91
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-proxy
+  namespace: gyp6-sale
+  labels:
+    app: frontend
+    mascot: kabachok
+  annotations:
+    devops-lab/mascot-approved: "true"
+data:
+  default.conf: |
+    server {
+      listen 80;
+      server_name _;
+
+      location /api/v1 {
+        proxy_pass http://backend:4200;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+      }
+
+      location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+      }
+    }
