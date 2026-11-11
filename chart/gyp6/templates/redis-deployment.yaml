@@ -1,0 +1,47 @@
+{{- $full := include "gyp6.fullname" . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $full }}-redis
+  namespace: {{ .Release.Namespace }}
+  {{- include "gyp6.meta" (dict "root" . "component" "redis") | nindent 2 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "gyp6.selectorLabels" (dict "root" . "component" "redis") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "gyp6.podLabels" (dict "root" . "component" "redis") | nindent 8 }}
+      {{- with .Values.commonAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: redis
+          image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          args: ["redis-server", "--requirepass", "$(REDIS_PASSWORD)"]
+          ports:
+            - containerPort: {{ .Values.redis.port }}
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $full }}-secret
+                  key: REDIS_PASSWORD
+          resources:
+            {{- toYaml .Values.redis.resources | nindent 12 }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.redis.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.redis.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20

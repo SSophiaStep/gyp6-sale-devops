@@ -1,0 +1,28 @@
+{{- $full := include "gyp6.fullname" . }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ $full }}-test
+  namespace: {{ .Release.Namespace }}
+  {{- include "gyp6.meta" (dict "root" . "component" "test") | nindent 2 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    {{- with .Values.commonAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  restartPolicy: Never
+  containers:
+    - name: test
+      image: "{{ .Values.utilImage.repository }}:{{ .Values.utilImage.tag }}"
+      command:
+        - sh
+        - -c
+        - |
+          set -e
+          echo "перевірка postgres";  nc -z {{ $full }}-postgres {{ .Values.postgres.service.port }}
+          echo "перевірка redis";     nc -z {{ $full }}-redis {{ .Values.redis.service.port }}
+          echo "перевірка backend";   nc -z {{ $full }}-backend {{ .Values.backend.service.port }}
+          echo "перевірка frontend";  nc -z {{ $full }}-frontend {{ .Values.frontend.service.port }}
+          echo "усі сервіси релізу {{ .Release.Name }} відповідають"

@@ -1,0 +1,148 @@
+# Значення за замовчуванням відповідають середовищу розробки (dev).
+# Для іншого середовища додайте файл значень: -f values-prod.yaml
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Назва середовища (виводиться в NOTES.txt)
+environment: dev
+
+# Публічний хост застосунку: Ingress, CORS, адреси автентифікації, hostAliases для nginx-sidecar
+publicHost: gyp6.local
+
+# Додаткові мітки та анотації, які додаються до всіх об'єктів чарта
+commonLabels: {}
+commonAnnotations: {}
+
+imagePullPolicy: IfNotPresent
+
+# Допоміжний образ: init-контейнер очікування бази, хук і тест релізу
+utilImage:
+  repository: busybox
+  tag: "1.36"
+
+backend:
+  image:
+    repository: gyp6-backend
+    tag: "1.0.0"
+  replicaCount: 1
+  port: 4200
+  strategy:
+    maxSurge: 1
+    maxUnavailable: 0
+  service:
+    type: ClusterIP
+    port: 4200
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 512Mi
+
+frontend:
+  image:
+    repository: gyp6-frontend
+    tag: "1.0.0"
+  replicaCount: 1
+  port: 3000
+  strategy:
+    maxSurge: 1
+    maxUnavailable: 0
+  service:
+    type: NodePort
+    port: 3000
+    # nodePort: 30080
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 512Mi
+  # nginx-sidecar: серверний рендеринг Next.js звертається до publicHost на порту 80
+  proxy:
+    enabled: true
+    image:
+      repository: nginx
+      tag: "1.27-alpine"
+    resources:
+      requests:
+        cpu: 25m
+        memory: 32Mi
+      limits:
+        cpu: 100m
+        memory: 64Mi
+
+postgres:
+  image:
+    repository: postgres
+    tag: "18.3-bookworm"
+  database: gyp6_db
+  user: gyp6
+  port: 5432
+  service:
+    type: ClusterIP
+    port: 5432
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 512Mi
+  persistence:
+    enabled: true
+    size: 1Gi
+    accessMode: ReadWriteOnce
+    storageClass: ""
+
+redis:
+  image:
+    repository: redis
+    tag: "8.2.5-bookworm"
+  user: default
+  port: 6379
+  service:
+    type: ClusterIP
+    port: 6379
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+ingress:
+  enabled: false
+  className: nginx
+  apiPath: /api/v1
+
+# Параметри конфігурації застосунку (потрапляють у ConfigMap)
+config:
+  nodeEnv: production
+  resendMailFrom: onboarding@resend.dev
+  s3:
+    region: us-east-1
+    endpoint: http://s3:4566
+    bucket: furniture-wholesale-bucket
+  oauth:
+    googleClientId: ""
+    facebookClientId: ""
+    appleClientId: ""
+
+# Чутливі параметри (потрапляють у Secret). Значення нижче тестові: реальні паролі
+# передавайте через --set або окремий захищений файл, який не потрапляє в git.
+secret:
+  postgresPassword: gyp6_test_password
+  redisPassword: redis_test_password
+  jwtSecret: test-jwt-secret-not-for-production
+  betterAuthSecret: test-better-auth-secret-not-for-production
+  resendApiKey: re_dummy_key_for_local_testing
+  s3AccessKey: test
+  s3SecretKey: test
+  googleClientSecret: ""
+  facebookClientSecret: ""
+  appleClientSecret: ""

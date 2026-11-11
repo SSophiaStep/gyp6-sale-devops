@@ -1,0 +1,103 @@
+{{- $full := include "gyp6.fullname" . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $full }}-frontend
+  namespace: {{ .Release.Namespace }}
+  {{- include "gyp6.meta" (dict "root" . "component" "frontend") | nindent 2 }}
+spec:
+  replicas: {{ .Values.frontend.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: {{ .Values.frontend.strategy.maxUnavailable }}
+      maxSurge: {{ .Values.frontend.strategy.maxSurge }}
+  selector:
+    matchLabels:
+      {{- include "gyp6.selectorLabels" (dict "root" . "component" "frontend") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "gyp6.podLabels" (dict "root" . "component" "frontend") | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- if .Values.frontend.proxy.enabled }}
+        checksum/proxy: {{ include (print $.Template.BasePath "/frontend-proxy-configmap.yaml") . | sha256sum }}
+        {{- end }}
+        kubectl.kubernetes.io/default-container: frontend
+        {{- with .Values.commonAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      enableServiceLinks: false
+      {{- if .Values.frontend.proxy.enabled }}
+      hostAliases:
+        - ip: "127.0.0.1"
+          hostnames:
+            - {{ .Values.publicHost | quote }}
+      {{- end }}
+      containers:
+        - name: frontend
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.frontend.port }}
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: {{ .Values.frontend.port | quote }}
+            - name: HOSTNAME
+              value: "0.0.0.0"
+            - name: API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ $full }}-config
+                  key: API_URL
+            - name: BACKEND_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ $full }}-config
+                  key: INTERNAL_BACKEND_URL
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.frontend.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.frontend.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 20
+        {{- if .Values.frontend.proxy.enabled }}
+        - name: proxy
+          image: "{{ .Values.frontend.proxy.image.repository }}:{{ .Values.frontend.proxy.image.tag }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: proxy-config
+              mountPath: /etc/nginx/conf.d
+          resources:
+            {{- toYaml .Values.frontend.proxy.resources | nindent 12 }}
+          readinessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
+        {{- end }}
+      {{- if .Values.frontend.proxy.enabled }}
+      volumes:
+        - name: proxy-config
+          configMap:
+            name: {{ $full }}-frontend-proxy
+      {{- end }}

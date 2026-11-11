@@ -1,0 +1,13 @@
+apiVersion: v2
+name: gyp6
+description: Helm-чарт застосунку Gyp6.sale (frontend на Next.js, backend на NestJS, PostgreSQL, Redis)
+type: application
+# Версія самого чарта: змінюється, коли змінюються шаблони або структура values (SemVer)
+version: 0.1.0
+# Версія застосунку, який розгортає чарт: збігається з тегом образів frontend і backend
+appVersion: "1.0.0"
+keywords:
+  - gyp6
+  - marketplace
+  - nextjs
+  - nestjs

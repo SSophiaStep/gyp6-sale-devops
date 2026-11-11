@@ -1,0 +1,45 @@
+# Середовище production: більше реплік і ресурсів, нова версія образів, Ingress увімкнено.
+# Паролі нижче є заглушками. У реальному середовищі передавайте їх через --set.
+environment: prod
+
+backend:
+  image:
+    tag: "1.1.0"
+  replicaCount: 3
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 768Mi
+
+frontend:
+  image:
+    tag: "1.1.0"
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 768Mi
+
+postgres:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 768Mi
+
+ingress:
+  enabled: true
+
+secret:
+  postgresPassword: CHANGE_ME_postgres
+  redisPassword: CHANGE_ME_redis
+  jwtSecret: CHANGE_ME_jwt
+  betterAuthSecret: CHANGE_ME_better_auth

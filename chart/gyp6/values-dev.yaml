@@ -1,0 +1,30 @@
+# Середовище розробки: мінімум реплік і ресурсів, Ingress вимкнено (доступ через NodePort).
+# Значення збігаються зі значеннями за замовчуванням і явно фіксують параметри dev.
+environment: dev
+
+backend:
+  image:
+    tag: "1.0.0"
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 512Mi
+
+frontend:
+  image:
+    tag: "1.0.0"
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 512Mi
+
+ingress:
+  enabled: false

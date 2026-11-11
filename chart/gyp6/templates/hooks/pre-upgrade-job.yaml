@@ -1,0 +1,39 @@
+{{- $full := include "gyp6.fullname" . }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $full }}-pre-upgrade
+  namespace: {{ .Release.Namespace }}
+  {{- include "gyp6.meta" (dict "root" . "component" "pre-upgrade") | nindent 2 }}
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    {{- with .Values.commonAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        {{- include "gyp6.podLabels" (dict "root" . "component" "pre-upgrade") | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: check-postgres
+          image: "{{ .Values.utilImage.repository }}:{{ .Values.utilImage.tag }}"
+          command:
+            - sh
+            - -c
+            - |
+              echo "pre-upgrade: перевірка бази даних перед оновленням релізу {{ .Release.Name }}"
+              for i in $(seq 1 30); do
+                if nc -z {{ $full }}-postgres {{ .Values.postgres.service.port }}; then
+                  echo "pre-upgrade: база даних доступна, оновлення можна виконувати"
+                  exit 0
+                fi
+                sleep 2
+              done
+              echo "pre-upgrade: база даних недоступна"
+              exit 1
