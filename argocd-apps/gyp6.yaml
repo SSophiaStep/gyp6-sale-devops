@@ -1,0 +1,24 @@
+# Application застосунку Gyp6.sale: Helm-чарт із цього ж репозиторію + values-minikube.yaml.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gyp6
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/SSophiaStep/gyp6-sale-gitops.git
+    targetRevision: main
+    path: charts/gyp6
+    helm:
+      valueFiles:
+        - values-minikube.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gyp6
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false   # у п.6а спершу false (OutOfSync), потім true (повернення значень з Git)
+    syncOptions:
+      - CreateNamespace=true

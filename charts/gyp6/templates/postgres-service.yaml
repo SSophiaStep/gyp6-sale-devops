@@ -1,0 +1,15 @@
+{{- $full := include "gyp6.fullname" . }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $full }}-postgres
+  namespace: {{ .Release.Namespace }}
+  {{- include "gyp6.meta" (dict "root" . "component" "postgres") | nindent 2 }}
+spec:
+  type: {{ .Values.postgres.service.type }}
+  selector:
+    {{- include "gyp6.selectorLabels" (dict "root" . "component" "postgres") | nindent 4 }}
+  ports:
+    - name: postgres
+      port: {{ .Values.postgres.service.port }}
+      targetPort: {{ .Values.postgres.port }}

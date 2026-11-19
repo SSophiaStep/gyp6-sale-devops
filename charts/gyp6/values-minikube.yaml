@@ -1,0 +1,27 @@
+# Значення для minikube (GitOps). Паролів тут немає: Secret gyp6-secret створюється поза Git.
+environment: minikube
+publicHost: gyp6.local
+
+backend:
+  image:
+    tag: "1.0.0"
+  replicaCount: 1
+
+frontend:
+  image:
+    tag: "1.0.0"
+  replicaCount: 1
+
+ingress:
+  enabled: true
+
+hooks:
+  enabled: false
+tests:
+  enabled: false
+
+# Неіснуючий тег стане Degraded за хвилину, а не за 10
+progressDeadlineSeconds: 60
+
+secret:
+  existingSecret: gyp6-secret

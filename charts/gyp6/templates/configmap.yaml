@@ -1,0 +1,29 @@
+{{- $full := include "gyp6.fullname" . }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $full }}-config
+  namespace: {{ .Release.Namespace }}
+  {{- include "gyp6.meta" (dict "root" . "component" "config") | nindent 2 }}
+data:
+  NODE_ENV: {{ .Values.config.nodeEnv | quote }}
+  HTTP_PORT: {{ .Values.backend.port | quote }}
+  HTTP_HOST: {{ printf "http://%s-backend:%v" $full .Values.backend.service.port | quote }}
+  HTTP_CORS: {{ printf "http://%s" .Values.publicHost | quote }}
+  BACKEND_URL: {{ printf "http://%s" .Values.publicHost | quote }}
+  FRONTEND_URL: {{ printf "http://%s" .Values.publicHost | quote }}
+  BETTER_AUTH_URL: {{ printf "http://%s" .Values.publicHost | quote }}
+  API_URL: {{ printf "http://%s-backend:%v" $full .Values.backend.service.port | quote }}
+  INTERNAL_BACKEND_URL: {{ printf "http://%s-backend:%v" $full .Values.backend.service.port | quote }}
+  POSTGRES_USER: {{ .Values.postgres.user | quote }}
+  POSTGRES_DB: {{ .Values.postgres.database | quote }}
+  REDIS_USER: {{ .Values.redis.user | quote }}
+  REDIS_HOST: {{ printf "%s-redis" $full | quote }}
+  REDIS_PORT: {{ .Values.redis.service.port | quote }}
+  RESEND_MAIL_FROM: {{ .Values.config.resendMailFrom | quote }}
+  S3_REGION: {{ .Values.config.s3.region | quote }}
+  S3_ENDPOINT: {{ .Values.config.s3.endpoint | quote }}
+  S3_BUCKET_NAME: {{ .Values.config.s3.bucket | quote }}
+  GOOGLE_CLIENT_ID: {{ .Values.config.oauth.googleClientId | quote }}
+  FACEBOOK_CLIENT_ID: {{ .Values.config.oauth.facebookClientId | quote }}
+  APPLE_CLIENT_ID: {{ .Values.config.oauth.appleClientId | quote }}
