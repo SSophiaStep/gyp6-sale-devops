@@ -1,0 +1,22 @@
+# Кореневий Application (App of Apps): єдиний об'єкт, який застосовується вручну.
+# Він стежить за каталогом argocd-apps/ і створює все, що там описано.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/SSophiaStep/gyp6-sale-gitops.git
+    targetRevision: main
+    path: argocd-apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

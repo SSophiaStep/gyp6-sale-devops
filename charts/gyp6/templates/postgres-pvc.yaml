@@ -1,0 +1,18 @@
+{{- if .Values.postgres.persistence.enabled }}
+{{- $full := include "gyp6.fullname" . }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $full }}-postgres-data
+  namespace: {{ .Release.Namespace }}
+  {{- include "gyp6.meta" (dict "root" . "component" "postgres") | nindent 2 }}
+spec:
+  accessModes:
+    - {{ .Values.postgres.persistence.accessMode }}
+  {{- with .Values.postgres.persistence.storageClass }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.postgres.persistence.size }}
+{{- end }}

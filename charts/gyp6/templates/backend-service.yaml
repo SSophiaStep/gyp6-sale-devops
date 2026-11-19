@@ -1,0 +1,15 @@
+{{- $full := include "gyp6.fullname" . }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $full }}-backend
+  namespace: {{ .Release.Namespace }}
+  {{- include "gyp6.meta" (dict "root" . "component" "backend") | nindent 2 }}
+spec:
+  type: {{ .Values.backend.service.type }}
+  selector:
+    {{- include "gyp6.selectorLabels" (dict "root" . "component" "backend") | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.backend.service.port }}
+      targetPort: {{ .Values.backend.port }}
