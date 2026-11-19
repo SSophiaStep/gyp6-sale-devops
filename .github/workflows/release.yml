@@ -1,0 +1,42 @@
+# Публікація образів у GHCR з тегом версії: git tag v1.0.0 && git push origin v1.0.0
+name: release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: read
+  packages: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Версія з тега
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+      - name: Прописати версію у /version
+        run: sed -i "s/APP_VERSION = \"dev\"/APP_VERSION = \"${VERSION}\"/" client/app/version/route.ts
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Backend
+        uses: docker/build-push-action@v6
+        with:
+          context: server
+          file: server/Dockerfile.api
+          push: true
+          tags: ghcr.io/ssophiastep/gyp6-backend:${{ env.VERSION }}
+      - name: Frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: client
+          file: client/Dockerfile.web
+          push: true
+          tags: ghcr.io/ssophiastep/gyp6-frontend:${{ env.VERSION }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=http://gyp6.local/api/v1/
+            NEXT_PUBLIC_FRONTEND_URL=http://gyp6.local
+            NEXT_PUBLIC_BA_API_URL=http://gyp6.local
+            NEXT_PUBLIC_BA_BASE_PATH=/api/v1/auth
+            NEXT_PUBLIC_S3_URL=http://gyp6.local/uploads
